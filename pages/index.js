@@ -22,6 +22,45 @@ export default function Home() {
       console.log("Bye bye");
     }
   };
+  const onClick2 = async () => {
+    let user;
+    try {
+      // # 1 Create an instance of User (mnemonic is optional)
+      user = await UserFactory.create(config);
+
+      // # 2 [OPTIONAL] If you did not pass a mnemonic, you can retrieve it
+      const mnemonic = user.getNightfallMnemonic();
+      console.log(mnemonic, "mnemonic");
+
+      // # 3 [OPTIONAL] You can check API Client, blockchain ws connection
+      const status = await user.checkStatus();
+      console.log("API Client, blockchain ws statuses", status);
+
+      // # 4 Make deposit
+      const tokenContractAddress = config.tokenContractAddress;
+      const tokenErcStandard = "ERC20";
+      const value = "0.0001";
+      const txReceipts = await user.makeDeposit({
+        tokenContractAddress,
+        tokenErcStandard,
+        value,
+      });
+      console.log("Transaction receipts", txReceipts);
+
+      // # 5 [OPTIONAL] You can check the transaction hash
+      console.log("Nightfall deposit tx hashes", user.nightfallDepositTxHashes);
+
+      // # 6 [OPTIONAL] You can check deposits that are not yet in Nightfall
+      const pendingDeposits = await user.checkPendingDeposits();
+      console.log("Pending balances", pendingDeposits);
+    } catch (error) {
+      console.log(error);
+      process.exit(1);
+    } finally {
+      user.close();
+      console.log("Bye bye");
+    }
+  };
 
   return (
     <div className={styles.container}>
@@ -32,6 +71,7 @@ export default function Home() {
       </Head>
 
       <button onClick={onClick}>deposit</button>
+      <button onClick={onClick2}>create</button>
     </div>
   );
 }
