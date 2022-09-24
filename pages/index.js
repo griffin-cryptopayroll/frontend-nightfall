@@ -1,15 +1,15 @@
 import Head from "next/head";
 import Image from "next/image";
 import { UserFactory } from "nightfall-sdk";
+import { useEffect, useState } from "react";
 import { config } from "../lib/config";
 import styles from "../styles/Home.module.css";
 
 export default function Home() {
+  const [user, setUser] = useState();
   const onClick = async () => {
-    let user;
     try {
       // # 1 Create an instance of User
-      user = await UserFactory.create(config);
 
       // # 2 Check Nightfall balances
       const balances = await user.checkNightfallBalances();
@@ -23,10 +23,8 @@ export default function Home() {
     }
   };
   const onClick2 = async () => {
-    let user;
     try {
       // # 1 Create an instance of User (mnemonic is optional)
-      user = await UserFactory.create(config);
 
       // # 2 [OPTIONAL] If you did not pass a mnemonic, you can retrieve it
       const mnemonic = user.getNightfallMnemonic();
@@ -39,7 +37,8 @@ export default function Home() {
       // # 4 Make deposit
       const tokenContractAddress = config.tokenContractAddress;
       const tokenErcStandard = "ERC20";
-      const value = "0.0001";
+      const value = "0.0000001";
+
       const txReceipts = await user.makeDeposit({
         tokenContractAddress,
         tokenErcStandard,
@@ -62,6 +61,55 @@ export default function Home() {
     }
   };
 
+  const onClick3 = async () => {
+    try {
+      // # 1 Create an instance of User
+      // // # 2 [OPTIONAL] For this example, we create a 2nd instance
+      // userRecipient = await UserFactory.create({
+      //   blockchainWsUrl: config.blockchainWsUrl,
+      //   clientApiUrl: config.clientApiUrl,
+      //   ethereumPrivateKey: config.ethereumPrivateKey,
+      // });
+
+      // # 3 Make transfer
+      const tokenContractAddress = config.tokenContractAddress;
+      const tokenErcStandard = "ERC20";
+      const value = "0.00000001";
+      const txReceipts = await user.makeTransfer({
+        tokenContractAddress,
+        tokenErcStandard,
+        value,
+        recipientNightfallAddress:
+          "0x06f2355af0014900a08969d882884bf66b63c860f8eefe3e53ad0fcefdda72df",
+        // isOffChain: true,
+      });
+      console.log("Transaction receipts", txReceipts);
+
+      // # 4 [OPTIONAL] You can check the transaction hash
+      console.log(
+        "Nightfall deposit tx hashes",
+        user.nightfallTransferTxHashes
+      );
+
+      // # 5 [OPTIONAL] You can check transfers that are not yet in a block
+      const pendingTransfers = await user.checkPendingTransfers();
+      console.log("Pending balances", pendingTransfers);
+    } catch (error) {
+      console.log(error);
+      process.exit(1);
+    } finally {
+      user.close();
+      console.log("Bye bye");
+    }
+  };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(async () => {
+    const res = await UserFactory.create(config);
+    setUser(res);
+    console.log(res);
+  }, []);
+
   return (
     <div className={styles.container}>
       <Head>
@@ -70,8 +118,9 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <button onClick={onClick}>deposit</button>
-      <button onClick={onClick2}>create</button>
+      <button onClick={onClick}>balance</button>
+      <button onClick={onClick2}>deposit</button>
+      <button onClick={onClick3}>transfer</button>
     </div>
   );
 }
